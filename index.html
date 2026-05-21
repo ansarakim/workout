@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>60 Days Mass System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-white min-h-screen">
+  <main class="max-w-7xl mx-auto p-5">
+    <section class="text-center mb-8">
+      <h1 class="text-4xl md:text-5xl font-bold mb-3">60 DAYS MASS SYSTEM</h1>
+      <p class="text-zinc-400">Тренировки • Восстановление • Масса • Дисциплина</p>
+    </section>
+
+    <section class="grid md:grid-cols-3 gap-4 mb-8">
+      <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 text-center">
+        <p class="text-zinc-400 mb-2">Орындалды</p>
+        <h2 id="completedCount" class="text-5xl font-bold">0</h2>
+        <p class="text-zinc-500 mt-2">күн</p>
+      </div>
+      <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 text-center">
+        <p class="text-zinc-400 mb-2">Қалды</p>
+        <h2 id="remainingCount" class="text-5xl font-bold">60</h2>
+        <p class="text-zinc-500 mt-2">күн</p>
+      </div>
+      <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 text-center">
+        <p class="text-zinc-400 mb-2">Прогресс</p>
+        <h2 id="progressPercent" class="text-5xl font-bold">0%</h2>
+        <p class="text-zinc-500 mt-2">60 күндік жол</p>
+      </div>
+    </section>
+
+    <section class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl md:text-3xl font-bold">Жалпы прогресс</h2>
+        <span id="progressText" class="text-zinc-400">0/60</span>
+      </div>
+      <div class="w-full bg-zinc-800 rounded-full h-6 overflow-hidden">
+        <div id="progressBar" class="bg-white h-full rounded-full transition-all duration-500" style="width:0%"></div>
+      </div>
+    </section>
+
+    <section id="visibleDays" class="grid md:grid-cols-3 gap-5 mb-8"></section>
+
+    <section class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 mb-8">
+      <button id="toggleAllDays" class="w-full bg-zinc-800 hover:bg-zinc-700 rounded-2xl p-4 font-semibold mb-4">
+        ▼ Барлық 60 күнді ашу
+      </button>
+      <div id="allDaysGrid" class="hidden grid grid-cols-10 gap-2"></div>
+    </section>
+
+    <section class="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-3xl p-6 border border-zinc-700 text-center">
+      <h2 class="text-3xl font-bold mb-3">🔥 Streak Mindset</h2>
+      <p class="text-zinc-300 text-lg">Бір күн ауыр болса да, minimum орында. Цепь үзілмесін.</p>
+    </section>
+  </main>
+
+  <div id="modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
+    <div class="bg-white text-black rounded-3xl p-6 max-w-md w-full shadow-2xl">
+      <h2 class="text-3xl font-bold mb-3">Күнді аяқтайсыз ба?</h2>
+      <p id="modalText" class="text-zinc-600 mb-6"></p>
+      <div class="grid grid-cols-2 gap-3">
+        <button id="cancelComplete" class="bg-zinc-200 rounded-2xl py-3 font-semibold">Жоқ</button>
+        <button id="confirmComplete" class="bg-black text-white rounded-2xl py-3 font-semibold">Иә, аяқтау</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const weeklyPlan = {
+      1: { title: "Push Day", focus: "Грудь • Плечи • Трицепс", emoji: "🔥", color: "bg-red-100", exercises: ["Жим штанги лёжа — 4×6-10", "Жим гантелей — 4×8-12", "Отжимания — 3×макс", "Жим вверх — 4×10", "Французский жим — 3×12"] },
+      2: { title: "Pull Day", focus: "Спина • Бицепс", emoji: "💪", color: "bg-blue-100", exercises: ["Подтягивания — 5 подходов", "Тяга штанги — 4×8-12", "Тяга гантели — 3×10", "Бицепс штанга — 4×10", "Молотки — 3×12"] },
+      3: { title: "Leg Day", focus: "Ноги • Пресс", emoji: "🦵", color: "bg-green-100", exercises: ["Присед со штангой — 5×6-10", "Румынская тяга — 4×10", "Выпады — 3×12", "Болгарские приседы — 3×10", "Пресс — 4 подхода"] },
+      4: { title: "Recovery + Mobility", focus: "Восстановление", emoji: "🧘", color: "bg-yellow-100", exercises: ["Растяжка — 10 мин", "Дыхание — 5-10 мин", "Ходьба — 20 мин", "Мобилити — 15 мин", "Лёгкий турник — 3 подхода"] },
+      5: { title: "Upper Mass", focus: "Верх тела", emoji: "⚡", color: "bg-purple-100", exercises: ["Подтягивания — 5 подходов", "Жим лёжа — 4×8", "Тяга штанги — 4×8-12", "Жим сидя — 3×10", "Суперсеты — 3 раунда"] },
+      6: { title: "Arms + Pump", focus: "Руки • Памп", emoji: "🏋️", color: "bg-pink-100", exercises: ["Махи — 5×15", "Жим Арнольда — 4×10", "Бицепс — 4×12", "Трицепс — 4×12", "Пресс — 4 подхода"] },
+      0: { title: "Reset Day", focus: "Полное восстановление", emoji: "🌿", color: "bg-slate-100", exercises: ["Прогулка — 30 мин", "Растяжка — 10 мин", "Сон — 8+ часов", "Баня / душ", "Спокойствие"] }
+    };
+
+    let completedDays = JSON.parse(localStorage.getItem("mass_completed_days") || "{}");
+    let taskChecks = JSON.parse(localStorage.getItem("mass_task_checks") || "{}");
+    let workoutTimes = JSON.parse(localStorage.getItem("mass_workout_times") || "{}");
+    let activeTimer = JSON.parse(localStorage.getItem("mass_active_timer") || "null");
+    let confirmDay = null;
+    let showAllDays = false;
+
+    function save() {
+      localStorage.setItem("mass_completed_days", JSON.stringify(completedDays));
+      localStorage.setItem("mass_task_checks", JSON.stringify(taskChecks));
+      localStorage.setItem("mass_workout_times", JSON.stringify(workoutTimes));
+      activeTimer ? localStorage.setItem("mass_active_timer", JSON.stringify(activeTimer)) : localStorage.removeItem("mass_active_timer");
+    }
+
+    function completedCount() {
+      return Object.values(completedDays).filter(Boolean).length;
+    }
+
+    function currentDay() {
+      return Math.min(completedCount() + 1, 60);
+    }
+
+    function formatTime(seconds = 0) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      return h > 0 ? `${h}ч ${m}м ${s}с` : `${m}м ${s}с`;
+    }
+
+    function getElapsed() {
+      if (!activeTimer) return 0;
+      return Math.floor((Date.now() - activeTimer.startedAt) / 1000);
+    }
+
+    function startTimer(day) {
+      if (day !== currentDay()) return;
+      activeTimer = { day, startedAt: Date.now() };
+      save();
+      render();
+    }
+
+    function finishTimer(day) {
+      if (!activeTimer || activeTimer.day !== day) return;
+      workoutTimes[day] = {
+        seconds: Math.floor((Date.now() - activeTimer.startedAt) / 1000),
+        finishedAt: new Date().toLocaleString()
+      };
+      activeTimer = null;
+      save();
+      render();
+    }
+
+    function toggleTask(day, task) {
+      if (day !== currentDay()) return;
+      taskChecks[day] = taskChecks[day] || {};
+      taskChecks[day][task] = !taskChecks[day][task];
+      const t = taskChecks[day];
+      const allDone = t.minimum && t.workout && t.stretch && t.recovery;
+      if (allDone && !completedDays[day]) openModal(day);
+      if (!allDone && completedDays[day]) completedDays[day] = false;
+      save();
+      render();
+    }
+
+    function openModal(day) {
+      confirmDay = day;
+      document.getElementById("modalText").innerText = `Барлық тапсырма белгіленді. Day ${day} completed ретінде сақталсын ба?`;
+      document.getElementById("modal").classList.remove("hidden");
+    }
+
+    function closeModal() {
+      confirmDay = null;
+      document.getElementById("modal").classList.add("hidden");
+    }
+
+    function completeDay() {
+      if (!confirmDay) return;
+      if (activeTimer && activeTimer.day === confirmDay) finishTimer(confirmDay);
+      completedDays[confirmDay] = true;
+      save();
+      closeModal();
+      render();
+    }
+
+    function dayCard(day, label) {
+      const plan = weeklyPlan[day % 7];
+      const isToday = day === currentDay();
+      const isCompleted = completedDays[day];
+      const locked = !isToday;
+      const time = workoutTimes[day];
+      const timerRunning = activeTimer && activeTimer.day === day;
+
+      const cardClass = isCompleted
+        ? "bg-white text-black border-white"
+        : isToday
+        ? `${plan.color} text-black border-white scale-[1.02] shadow-2xl`
+        : label === "Ертең"
+        ? "bg-gradient-to-br from-zinc-800 to-zinc-950 text-zinc-200 border-zinc-600"
+        : "bg-zinc-950 text-zinc-400 border-zinc-800";
+
+      const exercises = plan.exercises.map(e => `<div class="rounded-xl px-3 py-2 text-sm ${isToday || isCompleted ? "bg-white/50" : "bg-white/10"}">${e}</div>`).join("");
+
+      const checklist = locked ? `<div class="bg-black/20 rounded-2xl p-3 text-sm">🔒 Тек бүгінгі фокус қана орындалады</div>` : `
+        <div class="space-y-4">
+          <div class="rounded-2xl p-4 bg-black/10">
+            <p class="text-sm opacity-70 mb-2">Workout Timer</p>
+            <h3 class="text-3xl font-bold mb-3">${timerRunning ? formatTime(getElapsed()) : "0м 0с"}</h3>
+            ${timerRunning
+              ? `<button onclick="finishTimer(${day})" class="w-full bg-white text-black rounded-xl py-3 font-semibold">■ Таймерді аяқтау</button>`
+              : `<button onclick="startTimer(${day})" class="w-full bg-black text-white rounded-xl py-3 font-semibold">▶ Бастау</button>`}
+          </div>
+          ${checkItem(day, "minimum", "Daily Minimum", "50 отжиманий • 50 приседаний • 20 подтягиваний")}
+          ${checkItem(day, "workout", "Main Workout", "Негізгі жаттығуды толық орындау")}
+          ${checkItem(day, "stretch", "Stretching", "Растяжка 5-15 минут")}
+          ${checkItem(day, "recovery", "Recovery", "Дыхание, медитация немесе прогулка")}
+        </div>`;
+
+      return `
+        <div class="rounded-3xl p-5 transition border min-h-[620px] ${cardClass}">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <p class="text-sm opacity-70 mb-1">${label}</p>
+              <h3 class="text-3xl font-bold">Day ${day}</h3>
+              <p class="text-sm opacity-70 mt-1">${plan.title}</p>
+              <p class="text-xs opacity-60 mt-1">${plan.focus}</p>
+            </div>
+            <span class="text-4xl">${plan.emoji}</span>
+          </div>
+          <div class="space-y-2 mb-5">${exercises}</div>
+          ${time ? `<div class="rounded-2xl p-3 text-sm mb-4 bg-black/20">⏱ Уақыты: <b>${formatTime(time.seconds)}</b><p class="text-xs opacity-70 mt-1">Бітті: ${time.finishedAt}</p></div>` : ""}
+          ${checklist}
+        </div>`;
+    }
+
+    function checkItem(day, key, title, text) {
+      const checked = taskChecks[day] && taskChecks[day][key] ? "checked" : "";
+      return `
+        <label class="flex items-start gap-3 text-sm bg-white/40 rounded-2xl p-3 cursor-pointer">
+          <input type="checkbox" ${checked} onchange="toggleTask(${day}, '${key}')" class="mt-1" />
+          <div><p class="font-semibold">${title}</p><p class="text-xs opacity-70">${text}</p></div>
+        </label>`;
+    }
+
+    function render() {
+      const done = completedCount();
+      const remaining = 60 - done;
+      const percent = Math.round((done / 60) * 100);
+      const today = currentDay();
+      const yesterday = Math.max(today - 1, 1);
+      const tomorrow = Math.min(today + 1, 60);
+
+      document.getElementById("completedCount").innerText = done;
+      document.getElementById("remainingCount").innerText = remaining;
+      document.getElementById("progressPercent").innerText = `${percent}%`;
+      document.getElementById("progressText").innerText = `${done}/60`;
+      document.getElementById("progressBar").style.width = `${percent}%`;
+
+      document.getElementById("visibleDays").innerHTML = [
+        dayCard(yesterday, "Кеше"),
+        dayCard(today, "Бүгінгі фокус"),
+        dayCard(tomorrow, "Ертең")
+      ].join("");
+
+      document.getElementById("allDaysGrid").innerHTML = Array.from({ length: 60 }, (_, i) => i + 1).map(day => {
+        const cls = completedDays[day]
+          ? "bg-white text-black scale-105"
+          : day === today
+          ? "bg-zinc-600 text-white ring-2 ring-white"
+          : "bg-zinc-800 text-zinc-500";
+        return `<div class="aspect-square rounded-xl text-sm font-bold flex items-center justify-center ${cls}">${day}</div>`;
+      }).join("");
+    }
+
+    document.getElementById("toggleAllDays").onclick = () => {
+      showAllDays = !showAllDays;
+      document.getElementById("allDaysGrid").classList.toggle("hidden", !showAllDays);
+      document.getElementById("toggleAllDays").innerText = showAllDays ? "▲ 60 күнді жасыру" : "▼ Барлық 60 күнді ашу";
+    };
+    document.getElementById("cancelComplete").onclick = closeModal;
+    document.getElementById("confirmComplete").onclick = completeDay;
+
+    setInterval(() => {
+      if (activeTimer) render();
+    }, 1000);
+
+    render();
+  </script>
+</body>
+</html>
