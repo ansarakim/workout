@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>60 Days Mass System</title>
+  <title>60 Days Home Strength & Skills</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-black text-white min-h-screen">
   <main class="max-w-7xl mx-auto p-5">
     <section class="text-center mb-8">
-      <h1 class="text-4xl md:text-5xl font-bold mb-3">60 DAYS MASS SYSTEM</h1>
-      <p class="text-zinc-400">Тренировки • Восстановление • Масса • Дисциплина</p>
+      <h1 class="text-4xl md:text-5xl font-bold mb-3">60 DAYS HOME STRENGTH</h1>
+      <p class="text-zinc-400">Күнде 1 видео • 20–30 мин • Full Body • Штанга • Гантели • Турник • Skills</p>
     </section>
 
-    <section class="grid md:grid-cols-3 gap-4 mb-8">
+    <section class="grid md:grid-cols-4 gap-4 mb-8">
       <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 text-center">
         <p class="text-zinc-400 mb-2">Орындалды</p>
         <h2 id="completedCount" class="text-5xl font-bold">0</h2>
@@ -29,6 +29,11 @@
         <h2 id="progressPercent" class="text-5xl font-bold">0%</h2>
         <p class="text-zinc-500 mt-2">60 күндік жол</p>
       </div>
+      <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 text-center">
+        <p class="text-zinc-400 mb-2">Фаза</p>
+        <h2 id="phaseName" class="text-3xl font-bold mt-2">Foundation</h2>
+        <p id="phaseTip" class="text-zinc-500 mt-2 text-sm"></p>
+      </div>
     </section>
 
     <section class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 mb-8">
@@ -41,7 +46,24 @@
       </div>
     </section>
 
-    <section id="visibleDays" class="grid md:grid-cols-3 gap-5 mb-8"></section>
+    <!-- TODAY: big embedded video -->
+    <section id="todaySection" class="mb-8"></section>
+
+    <!-- Yesterday / Tomorrow -->
+    <section id="sideDays" class="grid md:grid-cols-2 gap-5 mb-8"></section>
+
+    <!-- Weekly overview -->
+    <section class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 mb-8">
+      <h2 class="text-2xl md:text-3xl font-bold mb-4">📅 Апталық жоспар</h2>
+      <div id="weekGrid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+    </section>
+
+    <!-- Skills -->
+    <section class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 mb-8">
+      <h2 class="text-2xl md:text-3xl font-bold mb-1">🤸 Skill Roadmap</h2>
+      <p class="text-zinc-500 text-sm mb-4">Күнделікті 5 мин skill practice — осы тізімнен таңда. Әр skill-де тексерілген tutorial бар.</p>
+      <div id="skillRoadmap" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
 
     <section class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800 mb-8">
       <button id="toggleAllDays" class="w-full bg-zinc-800 hover:bg-zinc-700 rounded-2xl p-4 font-semibold mb-4">
@@ -52,7 +74,7 @@
 
     <section class="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-3xl p-6 border border-zinc-700 text-center">
       <h2 class="text-3xl font-bold mb-3">🔥 Streak Mindset</h2>
-      <p class="text-zinc-300 text-lg">Бір күн ауыр болса да, minimum орында. Цепь үзілмесін.</p>
+      <p class="text-zinc-300 text-lg">Уақыт жоқ болса — видеоның жартысы + 5 мин skill. Цепь үзілмесін.</p>
     </section>
   </main>
 
@@ -68,16 +90,80 @@
   </div>
 
   <script>
+    // ================= WEEKLY PLAN — one follow-along video per day =================
+    // All video IDs verified available + embeddable (Oct 2026).
+    // key = day % 7  →  1=Day1(Mon-style) ... 0=Day7
     const weeklyPlan = {
-      1: { title: "Push Day", focus: "Грудь • Плечи • Трицепс", emoji: "🔥", color: "bg-white", exercises: ["Жим штанги лёжа — 4×6-10", "Жим гантелей — 4×8-12", "Отжимания — 3×макс", "Жим вверх — 4×10", "Французский жим — 3×12"] },
-      2: { title: "Pull Day", focus: "Спина • Бицепс", emoji: "💪", color: "bg-zinc-200", exercises: ["Подтягивания — 5 подходов", "Тяга штанги — 4×8-12", "Тяга гантели — 3×10", "Бицепс штанга — 4×10", "Молотки — 3×12"] },
-      3: { title: "Leg Day", focus: "Ноги • Пресс", emoji: "🦵", color: "bg-zinc-100", exercises: ["Присед со штангой — 5×6-10", "Румынская тяга — 4×10", "Выпады — 3×12", "Болгарские приседы — 3×10", "Пресс — 4 подхода"] },
-      4: { title: "Recovery + Mobility", focus: "Восстановление", emoji: "🧘", color: "bg-zinc-300", exercises: ["Растяжка — 10 мин", "Дыхание — 5-10 мин", "Ходьба — 20 мин", "Мобилити — 15 мин", "Лёгкий турник — 3 подхода"] },
-      5: { title: "Upper Mass", focus: "Верх тела", emoji: "⚡", color: "bg-zinc-200", exercises: ["Подтягивания — 5 подходов", "Жим лёжа — 4×8", "Тяга штанги — 4×8-12", "Жим сидя — 3×10", "Суперсеты — 3 раунда"] },
-      6: { title: "Arms + Pump", focus: "Руки • Памп", emoji: "🏋️", color: "bg-zinc-100", exercises: ["Махи — 5×15", "Жим Арнольда — 4×10", "Бицепс — 4×12", "Трицепс — 4×12", "Пресс — 4 подхода"] },
-      0: { title: "Reset Day", focus: "Полное восстановление", emoji: "🌿", color: "bg-slate-100", exercises: ["Прогулка — 30 мин", "Растяжка — 10 мин", "Сон — 8+ часов", "Баня / душ", "Спокойствие"] }
+      1: {
+        title: "Barbell Full Body", emoji: "🏋️", color: "bg-white",
+        focus: "Штанга • Ауыр база", equipment: "Штанга",
+        video: { id: "US4Y8FH784E", title: "30 Minute Full Body Barbell Workout | Follow Along", channel: "Tom Peto Training", length: "29:11" },
+        tips: ["Салмақты 8–10 қайталауға таңда", "Техника > салмақ", "Аптадан аптаға +2.5 кг"]
+      },
+      2: {
+        title: "Pull-up Bar Full Body", emoji: "💪", color: "bg-zinc-200",
+        focus: "Турник • Weighted calisthenics", equipment: "Турник (+ рюкзак/жилет салмақ)",
+        video: { id: "u7nSBY9yJKE", title: "20 Min Pull Up Bar Workout | Full Body Follow Along", channel: "Tom Peto Training", length: "21:46" },
+        tips: ["Оңай болса рюкзакқа 5–10 кг сал", "Тартылуда толық амплитуда", "Аяққа — секіріс/присед толық"]
+      },
+      3: {
+        title: "Handstand Skill Day", emoji: "🤸", color: "bg-zinc-100",
+        focus: "Handstand • Иық • Core", equipment: "Қабырға",
+        video: { id: "oJy6MJ-JLbw", title: "20 Minute Beginner Handstand Routine (FOLLOW ALONG)", channel: "Tom Merrick", length: "21:56" },
+        tips: ["Білекті міндетті түрде қыздыр", "Chest-to-wall → дене түзу", "Сапа — шаршағанша емес"]
+      },
+      4: {
+        title: "Barbell + Dumbbell", emoji: "🔥", color: "bg-zinc-200",
+        focus: "Штанга • Гантели • Full Body", equipment: "Штанга + гантели",
+        video: { id: "ow3eBiSdLpI", title: "30 Min Full Body Barbell and Dumbbell Workout | Follow Along", channel: "Tom Peto Training", length: "31:06" },
+        tips: ["Дүйсенбіден ауырырақ салмақ көр", "Артқы тізбек (тяга) — арқа түзу", "Демалыс — видео бойынша"]
+      },
+      5: {
+        title: "Dumbbell Strength", emoji: "⚡", color: "bg-zinc-100",
+        focus: "Гантели • Күш + май жағу", equipment: "Гантели",
+        video: { id: "N05p3wToB_o", title: "25 Min Full Body Dumbbell Workout at Home [Build Strength, Burn Fat]", channel: "TIFF x DAN", length: "27:22" },
+        tips: ["Орташа-ауыр гантель", "Соңғы 2 қайталау ауыр болуы керек", "Кейін 5 мин турникте skill"]
+      },
+      6: {
+        title: "EMOM Conditioning", emoji: "⏱", color: "bg-zinc-300",
+        focus: "Гантели • Кондиция", equipment: "Гантели",
+        video: { id: "qb74Gxgt-ew", title: "20 Min CrossFit E.M.O.M Dumbbell Workout", channel: "PMA Fitness", length: "23:09" },
+        tips: ["Әр минут ішінде бітіріп, қалғанында демал", "Үлгермесең — салмақты азайт", "Тыныс бақыла"]
+      },
+      0: {
+        title: "Mobility & Recovery", emoji: "🌿", color: "bg-slate-100",
+        focus: "Икемділік • Қалпына келу", equipment: "Төсеніш",
+        video: { id: "lPKRiU9u_Hc", title: "20 Minute Full Body Flexibility Routine! (FOLLOW ALONG)", channel: "Tom Merrick", length: "20:25" },
+        tips: ["Ауырсынуға дейін созба", "Терең тыныс", "Сон 8+ сағат"]
+      }
     };
 
+    // ================= SKILLS (verified tutorials) =================
+    const skills = [
+      { name: "Handstand", emoji: "🤸", video: "2-3wv5kLNnw", by: "Tom Merrick",
+        steps: ["Wrist prep + pike hold", "Chest-to-wall hold 60с", "Kick-ups + bail үйрену", "Freestanding 10с+"] },
+      { name: "Handstand Push-up", emoji: "⬇️", video: "h0HjqYRlXYg", by: "Calisthenicmovement",
+        steps: ["Pike push-ups", "Elevated pike push-ups", "Wall HSPU negatives", "Full wall HSPU"] },
+      { name: "Muscle-up", emoji: "🧗", video: "Gpny7WAAZ44", by: "Adam Frater",
+        steps: ["10+ strict pull-ups", "Explosive chest-to-bar", "Negatives + straight bar dips", "Бірінші muscle-up"] },
+      { name: "L-sit", emoji: "🪑", video: "HxDP7SqggpI", by: "Vitality",
+        steps: ["Foot-supported L-sit", "Tuck L-sit 20с", "One-leg L-sit", "Full L-sit 15с+"] },
+      { name: "Front Lever", emoji: "➖", video: "AGhb8V8M758", by: "FitnessFAQs",
+        steps: ["Active hang + scap pulls", "Tuck front lever 15с", "Advanced tuck 10с", "Straddle / One-leg"] },
+      { name: "Pistol Squat", emoji: "🦵", video: "vq5-vdgJc0I", by: "Squat University",
+        steps: ["Cossack squats", "Box pistols", "Assisted pistol", "Full pistol × 5"] }
+    ];
+
+    const DAY_NAMES = { 1: "Day 1", 2: "Day 2", 3: "Day 3", 4: "Day 4", 5: "Day 5", 6: "Day 6", 0: "Day 7" };
+
+    function phaseFor(day) {
+      if (day <= 20) return { name: "Foundation", tip: "Техника. Орташа салмақ." };
+      if (day <= 40) return { name: "Build", tip: "+1 rep немесе +2.5 кг әр аптада." };
+      return { name: "Peak", tip: "Ауыр салмақ, skill max-ын тексер." };
+    }
+
+    // ================= STATE =================
+    const TASKS = ["video", "skill", "stretch"];
     let completedDays = JSON.parse(localStorage.getItem("mass_completed_days") || "{}");
     let taskChecks = JSON.parse(localStorage.getItem("mass_task_checks") || "{}");
     let workoutTimes = JSON.parse(localStorage.getItem("mass_workout_times") || "{}");
@@ -92,13 +178,11 @@
       activeTimer ? localStorage.setItem("mass_active_timer", JSON.stringify(activeTimer)) : localStorage.removeItem("mass_active_timer");
     }
 
-    function completedCount() {
-      return Object.values(completedDays).filter(Boolean).length;
-    }
-
-    function currentDay() {
-      return Math.min(completedCount() + 1, 60);
-    }
+    const completedCount = () => Object.values(completedDays).filter(Boolean).length;
+    const currentDay = () => Math.min(completedCount() + 1, 60);
+    const planFor = day => weeklyPlan[day % 7];
+    const watchUrl = id => `https://www.youtube.com/watch?v=${id}`;
+    const thumb = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 
     function formatTime(seconds = 0) {
       const h = Math.floor(seconds / 3600);
@@ -106,40 +190,45 @@
       const s = seconds % 60;
       return h > 0 ? `${h}ч ${m}м ${s}с` : `${m}м ${s}с`;
     }
+    const getElapsed = () => activeTimer ? Math.floor((Date.now() - activeTimer.startedAt) / 1000) : 0;
 
-    function getElapsed() {
-      if (!activeTimer) return 0;
-      return Math.floor((Date.now() - activeTimer.startedAt) / 1000);
-    }
-
+    // ================= TIMER (updates only its own box → video keeps playing) =================
     function startTimer(day) {
       if (day !== currentDay()) return;
       activeTimer = { day, startedAt: Date.now() };
       save();
-      render();
+      renderTimer(day);
     }
 
     function finishTimer(day) {
       if (!activeTimer || activeTimer.day !== day) return;
-      workoutTimes[day] = {
-        seconds: Math.floor((Date.now() - activeTimer.startedAt) / 1000),
-        finishedAt: new Date().toLocaleString()
-      };
+      workoutTimes[day] = { seconds: getElapsed(), finishedAt: new Date().toLocaleString() };
       activeTimer = null;
       save();
-      render();
+      renderTimer(day);
     }
 
+    function renderTimer(day) {
+      const box = document.getElementById("timerBox");
+      if (!box) return;
+      const running = activeTimer && activeTimer.day === day;
+      const time = workoutTimes[day];
+      box.innerHTML = `
+        <p class="text-sm opacity-70 mb-2">Workout Timer</p>
+        <h3 id="timerDisplay" class="text-3xl font-bold mb-3">${running ? formatTime(getElapsed()) : time ? formatTime(time.seconds) : "0м 0с"}</h3>
+        ${running
+          ? `<button onclick="finishTimer(${day})" class="w-full bg-white text-black rounded-xl py-3 font-semibold">■ Таймерді аяқтау</button>`
+          : `<button onclick="startTimer(${day})" class="w-full bg-black text-white rounded-xl py-3 font-semibold">▶ ${time ? "Қайта бастау" : "Бастау"}</button>`}
+        ${time && !running ? `<p class="text-xs opacity-60 mt-2">Соңғы: ${formatTime(time.seconds)} • ${time.finishedAt}</p>` : ""}`;
+    }
+
+    // ================= TASKS =================
     function toggleTask(day, task) {
       if (day !== currentDay()) return;
       taskChecks[day] = taskChecks[day] || {};
       taskChecks[day][task] = !taskChecks[day][task];
-      const t = taskChecks[day];
-      const allDone = t.minimum && t.workout && t.stretch && t.recovery;
-      if (allDone && !completedDays[day]) openModal(day);
-      if (!allDone && completedDays[day]) completedDays[day] = false;
       save();
-      render();
+      if (TASKS.every(k => taskChecks[day][k]) && !completedDays[day]) openModal(day);
     }
 
     function openModal(day) {
@@ -160,95 +249,158 @@
       save();
       closeModal();
       render();
-    }
-
-    function dayCard(day, label) {
-      const plan = weeklyPlan[day % 7];
-      const isToday = day === currentDay();
-      const isCompleted = completedDays[day];
-      const locked = !isToday;
-      const time = workoutTimes[day];
-      const timerRunning = activeTimer && activeTimer.day === day;
-
-      const cardClass = isCompleted
-        ? "bg-white text-black border-white"
-        : isToday
-        ? `${plan.color} text-black border-white scale-[1.02] shadow-2xl`
-        : label === "Ертең"
-        ? "bg-gradient-to-br from-zinc-800 to-zinc-950 text-zinc-200 border-zinc-600"
-        : "bg-zinc-950 text-zinc-400 border-zinc-800";
-
-      const exercises = plan.exercises.map(e => `<div class="rounded-xl px-3 py-2 text-sm ${isToday || isCompleted ? "bg-white/50" : "bg-white/10"}">${e}</div>`).join("");
-
-      const checklist = locked ? `<div class="bg-black/20 rounded-2xl p-3 text-sm">🔒 Тек бүгінгі фокус қана орындалады</div>` : `
-        <div class="space-y-4">
-          <div class="rounded-2xl p-4 bg-black/10">
-            <p class="text-sm opacity-70 mb-2">Workout Timer</p>
-            <h3 class="text-3xl font-bold mb-3">${timerRunning ? formatTime(getElapsed()) : "0м 0с"}</h3>
-            ${timerRunning
-              ? `<button onclick="finishTimer(${day})" class="w-full bg-white text-black rounded-xl py-3 font-semibold">■ Таймерді аяқтау</button>`
-              : `<button onclick="startTimer(${day})" class="w-full bg-black text-white rounded-xl py-3 font-semibold">▶ Бастау</button>`}
-          </div>
-          ${checkItem(day, "minimum", "Daily Minimum", "50 отжиманий • 50 приседаний • 20 подтягиваний")}
-          ${checkItem(day, "workout", "Main Workout", "Негізгі жаттығуды толық орындау")}
-          ${checkItem(day, "stretch", "Stretching", "Растяжка 5-15 минут")}
-          ${checkItem(day, "recovery", "Recovery", "Дыхание, медитация немесе прогулка")}
-        </div>`;
-
-      return `
-        <div class="rounded-3xl p-5 transition border min-h-[620px] ${cardClass}">
-          <div class="flex items-start justify-between mb-4">
-            <div>
-              <p class="text-sm opacity-70 mb-1">${label}</p>
-              <h3 class="text-3xl font-bold">Day ${day}</h3>
-              <p class="text-sm opacity-70 mt-1">${plan.title}</p>
-              <p class="text-xs opacity-60 mt-1">${plan.focus}</p>
-            </div>
-            <span class="text-4xl">${plan.emoji}</span>
-          </div>
-          <div class="space-y-2 mb-5">${exercises}</div>
-          ${time ? `<div class="rounded-2xl p-3 text-sm mb-4 bg-black/20">⏱ Уақыты: <b>${formatTime(time.seconds)}</b><p class="text-xs opacity-70 mt-1">Бітті: ${time.finishedAt}</p></div>` : ""}
-          ${checklist}
-        </div>`;
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function checkItem(day, key, title, text) {
       const checked = taskChecks[day] && taskChecks[day][key] ? "checked" : "";
       return `
-        <label class="flex items-start gap-3 text-sm bg-white/40 rounded-2xl p-3 cursor-pointer">
-          <input type="checkbox" ${checked} onchange="toggleTask(${day}, '${key}')" class="mt-1" />
+        <label class="flex items-start gap-3 text-sm bg-white/50 rounded-2xl p-3 cursor-pointer">
+          <input type="checkbox" ${checked} onchange="toggleTask(${day}, '${key}')" class="mt-1 w-4 h-4" />
           <div><p class="font-semibold">${title}</p><p class="text-xs opacity-70">${text}</p></div>
         </label>`;
     }
 
-    function render() {
-      const done = completedCount();
-      const remaining = 60 - done;
-      const percent = Math.round((done / 60) * 100);
-      const today = currentDay();
-      const yesterday = Math.max(today - 1, 1);
-      const tomorrow = Math.min(today + 1, 60);
+    // ================= RENDER =================
+    function todayCard(day) {
+      const plan = planFor(day);
+      const v = plan.video;
+      const done = completedDays[day];
+      return `
+        <div class="rounded-3xl p-5 md:p-6 border border-white shadow-2xl text-black ${done ? "bg-white" : plan.color}">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <p class="text-sm opacity-70 mb-1">Бүгінгі фокус • ${phaseFor(day).name} ${done ? "• ✅ Аяқталды" : ""}</p>
+              <h2 class="text-4xl font-bold">Day ${day} — ${plan.title}</h2>
+              <p class="text-sm opacity-70 mt-1">${plan.focus} • 🧰 ${plan.equipment} • ⏱ ${v.length}</p>
+            </div>
+            <span class="text-5xl">${plan.emoji}</span>
+          </div>
 
+          <div class="grid lg:grid-cols-3 gap-5">
+            <div class="lg:col-span-2">
+              <div class="aspect-video rounded-2xl overflow-hidden bg-black shadow-xl">
+                <iframe class="w-full h-full" src="https://www.youtube-nocookie.com/embed/${v.id}?rel=0&modestbranding=1"
+                  title="${v.title}" frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  allowfullscreen></iframe>
+              </div>
+              <div class="flex items-center justify-between mt-3 text-sm">
+                <p><b>${v.title}</b><br><span class="opacity-70">${v.channel}</span></p>
+                <a href="${watchUrl(v.id)}" target="_blank" rel="noopener" class="shrink-0 ml-3 bg-red-600 text-white rounded-xl px-3 py-2 font-semibold hover:bg-red-500">YouTube ↗</a>
+              </div>
+              <div class="mt-4 grid sm:grid-cols-3 gap-2">
+                ${plan.tips.map(t => `<div class="bg-black/10 rounded-xl px-3 py-2 text-sm">💡 ${t}</div>`).join("")}
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div id="timerBox" class="rounded-2xl p-4 bg-black/10"></div>
+              ${checkItem(day, "video", "Follow-along видео", `${v.length} — толық орындау`)}
+              ${checkItem(day, "skill", "Skill practice — 5 мин", "Handstand / L-sit / Muscle-up (төмендегі roadmap)")}
+              ${checkItem(day, "stretch", "Stretch — 3–5 мин", "Жаттығудан кейін созылу")}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function sideCard(day, label) {
+      const plan = planFor(day);
+      const v = plan.video;
+      const done = completedDays[day];
+      const time = workoutTimes[day];
+      return `
+        <div class="rounded-3xl p-5 border ${done ? "bg-zinc-100 text-black border-white" : "bg-zinc-950 text-zinc-300 border-zinc-800"}">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <p class="text-sm opacity-70">${label} ${done ? "• ✅" : "• 🔒"}</p>
+              <h3 class="text-2xl font-bold">Day ${day} — ${plan.title}</h3>
+              <p class="text-xs opacity-60 mt-1">${plan.focus} • ⏱ ${v.length}</p>
+            </div>
+            <span class="text-3xl">${plan.emoji}</span>
+          </div>
+          <a href="${watchUrl(v.id)}" target="_blank" rel="noopener" class="block relative rounded-2xl overflow-hidden group">
+            <img src="${thumb(v.id)}" alt="${v.title}" class="w-full aspect-video object-cover opacity-80 group-hover:opacity-100 transition" loading="lazy" />
+            <span class="absolute inset-0 flex items-center justify-center">
+              <span class="w-14 h-14 rounded-full bg-red-600 text-white flex items-center justify-center text-xl shadow-xl">▶</span>
+            </span>
+          </a>
+          <p class="text-sm mt-2 opacity-80">${v.title} — <span class="opacity-70">${v.channel}</span></p>
+          ${time ? `<p class="text-xs mt-2 opacity-70">⏱ ${formatTime(time.seconds)} • ${time.finishedAt}</p>` : ""}
+        </div>`;
+    }
+
+    function renderStats() {
+      const done = completedCount();
+      const percent = Math.round((done / 60) * 100);
+      const phase = phaseFor(currentDay());
       document.getElementById("completedCount").innerText = done;
-      document.getElementById("remainingCount").innerText = remaining;
+      document.getElementById("remainingCount").innerText = 60 - done;
       document.getElementById("progressPercent").innerText = `${percent}%`;
       document.getElementById("progressText").innerText = `${done}/60`;
       document.getElementById("progressBar").style.width = `${percent}%`;
+      document.getElementById("phaseName").innerText = phase.name;
+      document.getElementById("phaseTip").innerText = phase.tip;
+    }
 
-      document.getElementById("visibleDays").innerHTML = [
-        dayCard(yesterday, "Кеше"),
-        dayCard(today, "Бүгінгі фокус"),
-        dayCard(tomorrow, "Ертең")
-      ].join("");
+    function renderWeek() {
+      const todayKey = currentDay() % 7;
+      document.getElementById("weekGrid").innerHTML = [1, 2, 3, 4, 5, 6, 0].map(k => {
+        const p = weeklyPlan[k];
+        const active = k === todayKey;
+        return `
+          <a href="${watchUrl(p.video.id)}" target="_blank" rel="noopener"
+             class="block rounded-2xl overflow-hidden border ${active ? "border-white ring-2 ring-white" : "border-zinc-800"} bg-zinc-950 hover:border-zinc-500 transition">
+            <img src="${thumb(p.video.id)}" alt="" class="w-full aspect-video object-cover" loading="lazy" />
+            <div class="p-3">
+              <p class="text-xs text-zinc-500">${DAY_NAMES[k]} ${active ? "• бүгін" : ""}</p>
+              <p class="font-bold">${p.emoji} ${p.title}</p>
+              <p class="text-xs text-zinc-400 mt-1">${p.video.channel} • ${p.video.length}</p>
+            </div>
+          </a>`;
+      }).join("");
+    }
 
+    function renderSkills() {
+      document.getElementById("skillRoadmap").innerHTML = skills.map(s => `
+        <div class="bg-zinc-950 rounded-2xl overflow-hidden border border-zinc-800">
+          <a href="${watchUrl(s.video)}" target="_blank" rel="noopener" class="block relative group">
+            <img src="${thumb(s.video)}" alt="${s.name} tutorial" class="w-full aspect-video object-cover opacity-80 group-hover:opacity-100 transition" loading="lazy" />
+            <span class="absolute bottom-2 right-2 text-xs bg-red-600 rounded-full px-3 py-1 font-semibold">▶ ${s.by}</span>
+          </a>
+          <div class="p-4">
+            <h3 class="text-xl font-bold mb-2">${s.emoji} ${s.name}</h3>
+            <ol class="space-y-1 text-sm text-zinc-300">
+              ${s.steps.map((st, i) => `<li class="flex gap-2"><span class="text-zinc-500">${i + 1}.</span>${st}</li>`).join("")}
+            </ol>
+          </div>
+        </div>`).join("");
+    }
+
+    function renderAllDays() {
+      const today = currentDay();
       document.getElementById("allDaysGrid").innerHTML = Array.from({ length: 60 }, (_, i) => i + 1).map(day => {
         const cls = completedDays[day]
           ? "bg-white text-black scale-105"
           : day === today
           ? "bg-zinc-600 text-white ring-2 ring-white"
           : "bg-zinc-800 text-zinc-500";
-        return `<div class="aspect-square rounded-xl text-sm font-bold flex items-center justify-center ${cls}">${day}</div>`;
+        return `<div title="${planFor(day).title}" class="aspect-square rounded-xl text-sm font-bold flex items-center justify-center ${cls}">${day}</div>`;
       }).join("");
+    }
+
+    // Full render — only on load and when the day changes (so the video isn't reloaded on every click)
+    function render() {
+      const today = currentDay();
+      renderStats();
+      document.getElementById("todaySection").innerHTML = todayCard(today);
+      renderTimer(today);
+      document.getElementById("sideDays").innerHTML = [
+        today > 1 ? sideCard(today - 1, "Кеше") : "",
+        today < 60 ? sideCard(today + 1, "Ертең") : ""
+      ].join("");
+      renderWeek();
+      renderAllDays();
     }
 
     document.getElementById("toggleAllDays").onclick = () => {
@@ -260,9 +412,11 @@
     document.getElementById("confirmComplete").onclick = completeDay;
 
     setInterval(() => {
-      if (activeTimer) render();
+      const el = document.getElementById("timerDisplay");
+      if (activeTimer && el) el.innerText = formatTime(getElapsed());
     }, 1000);
 
+    renderSkills();
     render();
   </script>
 </body>
